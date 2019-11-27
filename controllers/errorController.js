@@ -40,6 +40,14 @@ const handleDuplicateErrorDB = err => {
   return new AppError(message, 500);
 };
 
+const handleValidationErrorDB = err => {
+  const errors = Object.values(err.errors).map(error => {
+    return error.message;
+  });
+  const message = `Ivalid input data. ${errors.join('. ')}`;
+  return new AppError(message, 400);
+};
+
 // by specifing 4 args, express automatically knows that this is
 // error handling middleware
 module.exports = (err, req, res, next) => {
@@ -52,6 +60,8 @@ module.exports = (err, req, res, next) => {
     let error = { ...err };
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     else if (error.code === 11000) error = handleDuplicateErrorDB(error);
+    else if (error.name === 'ValidationError')
+      error = handleValidationErrorDB(error);
     sendErrorProd(error, res);
   }
 };

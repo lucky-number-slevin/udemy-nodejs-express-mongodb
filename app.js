@@ -2,7 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const AppError = require('./utils/appError');
-const globalErrorHandler = require('./controllers/errorController')
+const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
@@ -28,7 +28,10 @@ app.use('/api/v1/users', userRouter);
 // handle all http methods and all unhadled urls
 // this would not be reached if one of the above routes had handled the request
 app.all('*', (req, res, next) => {
-  const error = new AppError(`Can't find ${req.originalUrl} on this server`, 404);
+  const error = new AppError(
+    `Can't find ${req.originalUrl} on this server`,
+    404
+  );
   // NODE: if we pass an arg into next() func, express will automaticlly assume that that arg is an error, and it will
   // then skip all other middlewares, and it will pase the error to the middleware function for handling global errors
   next(error);
