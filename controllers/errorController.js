@@ -48,6 +48,9 @@ const handleValidationErrorDB = err => {
   return new AppError(message, 400);
 };
 
+const handleJWTError = err =>
+  new AppError('Invalid token. Please login again.', 401);
+
 // by specifing 4 args, express automatically knows that this is
 // error handling middleware
 module.exports = (err, req, res, next) => {
@@ -62,6 +65,8 @@ module.exports = (err, req, res, next) => {
     else if (error.code === 11000) error = handleDuplicateErrorDB(error);
     else if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
+    else if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
+
     sendErrorProd(error, res);
   }
 };
