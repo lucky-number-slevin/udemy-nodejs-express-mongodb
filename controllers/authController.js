@@ -20,7 +20,18 @@ const getTokenFromHeaders = headers => {
 
 const createAndSendResponseWithToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-  delete user.password;
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true // tells browser to recieve the cookie, store it and send it with every request
+  };
+  // set only on secure (https) connection
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
+
   const userDTO = {
     id: user._id,
     email: user.email,
