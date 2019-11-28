@@ -49,7 +49,7 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.protectRoute = catchAsync(async (req, res, next) => {
+exports.protectRouteEndpoint = catchAsync(async (req, res, next) => {
   let token;
   if (
     req.headers.authorization &&
@@ -93,3 +93,37 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+exports.restrictRouteEndpointTo = (...roles) => {
+  return async (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+};
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // get user based on POST email
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(
+      new AppError(`There is no user with email "${req.body.email}"`, 404)
+    );
+  }
+
+  // generate the random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  res.status(200).json({
+    status: 'success',
+    user
+  });
+
+  // send it to user's email
+});
+
+exports.resetPassword = (req, res, next) => {};
