@@ -9,7 +9,11 @@ const router = express.Router({
 router
   .route('/')
   .get(reviewController.getAllReviews)
-  .post(authController.protectRoute, reviewController.createReview);
+  .post(
+    authController.protectRoute,
+    reviewController.setTourAndUserId,
+    reviewController.createReview
+  );
 
 router
   .route('/:id')

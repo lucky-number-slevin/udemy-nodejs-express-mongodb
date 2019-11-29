@@ -31,9 +31,4 @@ router
     tourController.deleteTour
   );
 
-// NESTE ROUTES
-// POST /tour/{tourId}/reviews
-// GET /tour/{tourId}/reviews
-// GET /tour/{tourId}/reviews/{reviewId}
-
 module.exports = router;
