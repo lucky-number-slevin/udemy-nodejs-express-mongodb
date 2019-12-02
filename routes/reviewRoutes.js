@@ -6,11 +6,14 @@ const router = express.Router({
   mergeParams: true
 });
 
+// Protect all routes after this point
+router.use(authController.protectRoute);
+
 router
   .route('/')
   .get(reviewController.getAllReviews)
   .post(
-    authController.protectRoute,
+    authController.restrictRouteTo('user'),
     reviewController.setTourAndUserId,
     reviewController.createReview
   );
@@ -18,7 +21,14 @@ router
 router
   .route('/:id')
   .get(reviewController.getReview)
-  .patch(reviewController.updateReview)
-  .delete(reviewController.deleteReview);
+  // guides should not be able to change, post or delete reviews
+  .patch(
+    authController.restrictRouteTo('user', 'admin'),
+    reviewController.updateReview
+  )
+  .delete(
+    authController.restrictRouteTo('user', 'admin'),
+    reviewController.deleteReview
+  );
 
 module.exports = router;

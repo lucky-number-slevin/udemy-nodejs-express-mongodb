@@ -35,7 +35,8 @@ const tourSchema = new mongoose.Schema(
       type: Number,
       default: 4.5,
       min: [1, 'Rating must be above 1.0'],
-      max: [5, 'Rating must be below 5.0']
+      max: [5, 'Rating must be below 5.0'],
+      set: val => val.toFixed(2)
     },
     ratingsQuantity: {
       type: Number,
@@ -121,6 +122,12 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// tourSchema.index({ price: 1 });
+// compound indexes also work when we are querying these fields individually:
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
+
 tourSchema.virtual('durationWeeks').get(function() {
   return this.duration / 7;
 });
@@ -164,7 +171,7 @@ tourSchema.post(/^find/, function(docs, next) {
 tourSchema.pre('aggregate', function(next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
 
-  console.log(this.pipeline());
+  // console.log(this.pipeline());
   next();
 });
 

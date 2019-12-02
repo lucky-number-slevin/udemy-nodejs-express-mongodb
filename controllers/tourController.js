@@ -1,8 +1,7 @@
 const Tour = require('./../models/tourModel');
-const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
-const AppError = require('./../utils/appError');
 const handlerFactory = require('./handlerFactory');
+const AppError = require('./../utils/appError');
 
 exports.aliasTopTours = (req, res, next) => {
   req.query.limit = '5';
@@ -11,42 +10,8 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
-  // EXECUTE QUERY
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-  const tours = await features.query;
-
-  // SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours
-    }
-  });
-});
-
-exports.getTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id).populate('reviews');
-  // Tour.findOne({ _id: req.params.id })
-
-  if (!tour) {
-    // return and execute
-    return next(new AppError(`No tour found with ID ${req.params.id}`, 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour
-    }
-  });
-});
-
+exports.getAllTours = handlerFactory.getAll(Tour);
+exports.getTour = handlerFactory.getOne(Tour, { path: 'reviews' });
 exports.createTour = handlerFactory.createOne(Tour);
 exports.updateTour = handlerFactory.updateOne(Tour);
 exports.deleteTour = handlerFactory.deleteOne(Tour);
@@ -125,6 +90,44 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       plan
+    }
+  });
+});
+
+// 45.401144, 18.975125
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+
+  // mongodb expects radius of a sphere to bi in radians
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng) {
+    next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng.',
+        400
+      )
+    );
+  }
+
+  // $geoWithin is predefined mongoose operator
+  const tours = await Tour.find({
+    startLocation: {
+      $geoWithin: {
+        $centerSphere: [
+          [lng, lat], // order metters
+          radius
+        ]
+      }
+    }
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      tours
     }
   });
 });

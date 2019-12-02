@@ -56,18 +56,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// virtual child documents
-// userSchema.virtual('reviews', {
-//   ref: 'Review',
-//   foreignField: 'user',
-//   localField: '_id'
-// });
-
-// userSchema.pre(/^find/, function(next) {
-//   this.populate('reviews');
-//   next();
-// });
-
 userSchema.pre(/^find/, function(next) {
   this.find({ active: { $ne: false } });
   next();

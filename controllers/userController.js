@@ -3,7 +3,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const handlerFactory = require('./handlerFactory');
 
-const filteredObj = (obj, allowedFields) => {
+const filterObj = (obj, allowedFields) => {
   const filteredObj = {};
   Object.keys(obj).forEach(key => {
     if (allowedFields.includes(key)) filteredObj[key] = obj[key];
@@ -11,17 +11,17 @@ const filteredObj = (obj, allowedFields) => {
   return filteredObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+exports.getAllUsers = handlerFactory.getAll(User);
+exports.getUser = handlerFactory.getOne(User);
+exports.createUser = handlerFactory.createOne(User);
+// Do NOT update password with this
+exports.updateUser = handlerFactory.updateOne(User);
+exports.deleteUser = handlerFactory.deleteOne(User);
 
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
-    data: {
-      users
-    }
-  });
-});
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   // create error if user POST password data
@@ -35,8 +35,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   // update user document
-  const filteredBody = filteredObj(req.body, ['name', 'email']);
-  // console.log('req.body: ', req.body, 'filtered body: ', filteredBody);
+  const filteredBody = filterObj(req.body, ['name', 'email']);
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true
@@ -57,22 +56,3 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     data: null
   });
 });
-
-exports.getUser = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
-
-  if (!user) {
-    return next(new AppError(`No user found with ID ${req.params.id}`, 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user
-    }
-  });
-});
-
-// Do NOT update password with this
-exports.updateUser = handlerFactory.updateOne(User);
-exports.deleteUser = handlerFactory.deleteOne(User);
