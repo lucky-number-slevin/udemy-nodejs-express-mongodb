@@ -1,11 +1,16 @@
 /* esling-disable */
 
 // type is 'succes' or 'error'
-export const showAlert = (type, message) => {
+export const showAlert = (type, message, reloadPage = false) => {
 	removeAlerts();
 	const markup = `<div class="alert alert--${type}">${message}</div>`;
 	document.querySelector('body').insertAdjacentHTML('afterbegin', markup);
-	window.setTimeout(removeAlerts, 4000);
+	window.setTimeout(() => {
+		removeAlerts();
+		if (reloadPage) {
+			location.reload();
+		}
+	}, 4000);
 };
 
 export const removeAlerts = () => {

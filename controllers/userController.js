@@ -1,7 +1,60 @@
+const multer = require('multer');
+const sharp = require('sharp');
+
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const handlerFactory = require('./handlerFactory');
+
+// IF WE DO NOT NEED IMAGE PROCESSING
+// const multerStorage = multer.diskStorage({
+// 	destination: (req, file, callback) => {
+// 		callback(null, 'public/img/users');
+// 	},
+// 	filename: (req, file, callback) => {
+// 		const extension = file.mimetype.split('/')[1];
+// 		callback(null, `user-${req.user.id}-${Date.now()}.${extension}`);
+// 	}
+// });
+
+// first, save image as buffer, bcs we are resizing it before saving
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, callback) => {
+	if (file.mimetype.startsWith('image')) {
+		callback(null, true);
+	} else {
+		callback(
+			new AppError(
+				'You must provide an image! Please upload only images.',
+				400
+			),
+			false
+		);
+	}
+};
+
+const upload = multer({
+	storage: multerStorage,
+	fileFilter: multerFilter
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = async (req, res, next) => {
+	if (!req.file) return next();
+
+	// set filename to req.file so it can be accessed inside next middlewares
+	req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+	// crop img to square
+	await sharp(req.file.buffer)
+		.resize(500, 500)
+		.toFormat('jpeg')
+		.jpeg({ quality: 90 })
+		.toFile(`public/img/users/${req.file.filename}`);
+
+	next();
+};
 
 const filterObj = (obj, allowedFields) => {
 	const filteredObj = {};
@@ -35,7 +88,8 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 	}
 
 	// update user document
-	const filteredBody = filterObj(req.body, ['name', 'email', 'photo']);
+	const filteredBody = filterObj(req.body, ['name', 'email']);
+	if (req.file) filteredBody.photo = req.file.filename;
 	const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
 		new: true,
 		runValidators: true
