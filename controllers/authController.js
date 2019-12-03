@@ -31,6 +31,7 @@ const createAndSendResponseWithToken = (user, statusCode, res) => {
 			Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
 		),
 		httpOnly: true // tells browser to recieve the cookie, store it and send it with every request
+		// cannot manipulate or destroy the cookie
 	};
 	// set only on secure (https) connection
 	if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
@@ -80,6 +81,15 @@ exports.login = catchAsync(async (req, res, next) => {
 	createAndSendResponseWithToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+	// override the "jwt" cookie with some dommy text
+	res.cookie('jwt', 'loggedout', {
+		expires: new Date(Date.now() + 10 * 10000),
+		httpOnly: true
+	});
+	res.status(200).json({ status: 'success' });
+};
+
 exports.protectRoute = catchAsync(async (req, res, next) => {
 	const token = getTokenFromHeaders(req);
 
@@ -116,6 +126,7 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
 
 	// grant acces to protected route
 	req.user = currentUser;
+	res.locals.user = currentUser;
 	next();
 });
 
@@ -219,9 +230,12 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 });
 
 // Only for rendered pages (no errors) - token should come from cookie
-exports.isLoggedIn = catchAsync(async (req, res, next) => {
+exports.isLoggedIn = async (req, res, next) => {
 	// check if token has been provided
-	if (req.cookies.jwt) {
+	if (!req.cookies.jwt) {
+		return next();
+	}
+	try {
 		// verify the token
 		const decodedToken = await promisify(jwt.verify)(
 			req.cookies.jwt,
@@ -241,7 +255,7 @@ exports.isLoggedIn = catchAsync(async (req, res, next) => {
 		// there is a logged in user (pass data into a template)
 		res.locals.user = currentUser;
 		return next();
+	} catch (err) {
+		return next();
 	}
-	// there is no logged in user
-	next();
-});
+};
