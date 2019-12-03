@@ -1,8 +1,6 @@
 /* esling-disable */
 
-console.log('HELLO FROM THE CLIENT SIDE');
 const locations = JSON.parse(document.getElementById('map').dataset.locations);
-console.log('LOCATIONS', locations);
 
 mapboxgl.accessToken =
 	'pk.eyJ1IjoiYmFraXNoYSIsImEiOiJjazNvbzQxb3UwYTVyM2hvNHZvY2k1YW9oIn0.rwR8nAPAoDwXDqGg_eAz8Q';
