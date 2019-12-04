@@ -10,7 +10,7 @@ export const updateUserSettings = async (data, type = 'data') => {
 		const urlEndpoint = type === 'data' ? 'update-me' : 'update-my-password';
 		const res = await axios({
 			method: 'PATCH',
-			url: `http://localhost:3000/api/v1/users/${urlEndpoint}`,
+			url: `/api/v1/users/${urlEndpoint}`,
 			data
 		});
 
