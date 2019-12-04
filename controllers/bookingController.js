@@ -57,7 +57,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 const createBookingCheckout = async session => {
 	console.log('STRIPE SESSION', session); // TODO: DELETE
 	const tour = session.client_reference_id;
-	const user = await User.findOne({ emal: session.customer_email });
+	const user = await User.findOne({ emial: session.customer_email });
 	const price = session.display_items[0].amount / 100;
 	console.log('TOUR ID', tour, 'USER', user, 'PRICE', price); // TODO: DELETE
 	await Booking.create({ tour, user: user.id, price });
