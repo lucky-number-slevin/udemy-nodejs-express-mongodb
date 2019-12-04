@@ -9,7 +9,7 @@ router.use(authController.isLoggedIn);
 
 router.get(
 	'/',
-	bookingController.createBookingCheckout, // temporary solution
+	// bookingController.createBookingCheckout, // temporary solution
 	authController.isLoggedIn,
 	viewsController.getOverview
 );
