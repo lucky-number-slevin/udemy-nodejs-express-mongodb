@@ -57,7 +57,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 const createBookingCheckout = async session => {
 	console.log('STRIPE SESSION', session); // TODO: DELETE
 	const tour = session.client_reference_id;
-	const user = await User.findOne({ emial: session.customer_email });
+	const user = await User.findOne({ email: session.customer_email });
 	if (!user) {
 		console.log('Cannot find user with email: ', session.customer_email);
 		return;
