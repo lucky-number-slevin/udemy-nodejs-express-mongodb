@@ -19,6 +19,9 @@ const bookingRouter = require('./routes/bookingRoutes');
 
 const app = express();
 
+// Heroku requires this:
+app.enable('trust proxy');
+
 // express supports pug engine (and others), but it needs to be installed
 app.set('view engine', 'pug');
 app.set('veiws', path.join(__dirname, 'views'));

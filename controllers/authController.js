@@ -23,18 +23,20 @@ const getTokenFromHeaders = req => {
 	return null;
 };
 
-const createAndSendResponseWithToken = (user, statusCode, res) => {
+const createAndSendResponseWithToken = (user, statusCode, req, res) => {
 	const token = signToken(user._id);
 
 	const cookieOptions = {
 		expires: new Date(
 			Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
 		),
-		httpOnly: true // tells browser to recieve the cookie, store it and send it with every request
+		// tells browser to recieve the cookie, store it and send it with every request
 		// cannot manipulate or destroy the cookie
+		httpOnly: true,
+		// set only on secure (https) connection;
+		// this is Heroku specific configuration:
+		secure: req.secure || req.headers('x-forwarded-proto') === 'https'
 	};
-	// set only on secure (https) connection
-	if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
 	res.cookie('jwt', token, cookieOptions);
 
@@ -64,7 +66,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 	const userSettingsUrl = `${req.protocol}://${req.get('host')}/me`;
 	await new Email(newUser, userSettingsUrl).sendWelcome();
 
-	createAndSendResponseWithToken(newUser, 201, res);
+	createAndSendResponseWithToken(newUser, 201, req, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -79,7 +81,7 @@ exports.login = catchAsync(async (req, res, next) => {
 		return next(new AppError('Incorrect email and/or password', 401));
 	}
 
-	createAndSendResponseWithToken(user, 200, res);
+	createAndSendResponseWithToken(user, 200, req, res);
 });
 
 exports.logout = (req, res) => {
@@ -201,7 +203,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 	await user.save();
 
 	// 4. log the user in, send JWT
-	createAndSendResponseWithToken(user, 200, res);
+	createAndSendResponseWithToken(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -222,7 +224,7 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 	user.passwordConfirm = req.body.passwordConfirm;
 	await user.save();
 	// 4. log user in, send JWT
-	createAndSendResponseWithToken(user, 200, res);
+	createAndSendResponseWithToken(user, 200, req, res);
 });
 
 // Only for rendered pages (no errors) - token should come from cookie
