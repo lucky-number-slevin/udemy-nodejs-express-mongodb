@@ -14,7 +14,6 @@ module.exports = class Email {
 		if (process.env.NODE_ENV === 'production') {
 			return 1;
 		}
-		console.log(' RETURNING NODEMAILER TRANSPORT');
 		return nodemailer.createTransport({
 			// service: 'Gmail',
 			host: process.env.EMAIL_HOST,
