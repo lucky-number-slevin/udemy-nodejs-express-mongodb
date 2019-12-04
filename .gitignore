@@ -1,6 +1,11 @@
 node_modules/
+
 *.env
 !example.*.env
+
+.pretierrc
+.eslintrc*
+
 bundle.js
 bundle.js.map
 /.cache/
