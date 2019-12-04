@@ -12,7 +12,7 @@ module.exports = class Email {
 
 	createTransport() {
 		if (process.env.NODE_ENV === 'production') {
-			return 1;
+			return false;
 		}
 		return nodemailer.createTransport({
 			// service: 'Gmail',
@@ -46,7 +46,10 @@ module.exports = class Email {
 		};
 
 		// 3. create a transport and send email
-		await this.createTransport().sendMail(mailOptions);
+		const transport = this.createTransport();
+		if (transport) {
+			await transport.sendMail(mailOptions);
+		}
 	}
 
 	async sendWelcome() {
