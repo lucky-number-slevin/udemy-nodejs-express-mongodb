@@ -58,8 +58,11 @@ const createBookingCheckout = async session => {
 	console.log('STRIPE SESSION', session); // TODO: DELETE
 	const tour = session.client_reference_id;
 	const user = await User.findOne({ emial: session.customer_email });
+	if (!user) {
+		console.log('Cannot find user with email: ', session.customer_email);
+		return;
+	}
 	const price = session.display_items[0].amount / 100;
-	console.log('TOUR ID', tour, 'USER', user, 'PRICE', price); // TODO: DELETE
 	await Booking.create({ tour, user: user.id, price });
 };
 
