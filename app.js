@@ -8,6 +8,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const compression = require('compression');
+const cors = require('cors');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -27,6 +28,12 @@ app.set('view engine', 'pug');
 app.set('veiws', path.join(__dirname, 'views'));
 
 // 1) GLOBAL MIDDLEWARES
+// Implement CORS (on entire app for simple requests [GET, POST])
+app.use(cors());
+
+// Allow CORS to OPTION HTTP method on all the routes
+app.options('*', cors());
+
 // Serving static files
 // app.use(express.static(`${__dirname}/public`));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -86,7 +93,12 @@ app.use((req, res, next) => {
 app.use('/', viewRouter);
 
 // 3.2) API ROUTES
-app.use('/api/v1/tours', tourRouter);
+app.use(
+	'/api/v1/tours',
+	// allow CORS only on this router:
+	// cors(),
+	tourRouter
+);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
 app.use('/api/v1/bookings', bookingRouter);
