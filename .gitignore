@@ -6,6 +6,4 @@ node_modules/
 .pretierrc
 .eslintrc*
 
-bundle.js
-bundle.js.map
-/.cache/
+.cache/
