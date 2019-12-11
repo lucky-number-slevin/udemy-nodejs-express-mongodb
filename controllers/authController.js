@@ -12,7 +12,10 @@ const signToken = userId =>
   });
 
 const getTokenFromHeaders = req => {
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
     return req.headers.authorization.split(' ')[1];
   } else if (req.cookies.jwt) {
     return req.cookies.jwt;
@@ -22,15 +25,17 @@ const getTokenFromHeaders = req => {
 
 const createAndSendResponseWithToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
-
   const cookieOptions = {
-    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
-    // tells browser to recieve the cookie, store it and send it with every request
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    // tells browser to receive the cookie, store it and send it with every request
     // cannot manipulate or destroy the cookie
     httpOnly: true,
     // set only on secure (https) connection;
     // this is Heroku specific configuration:
-    secure: req.secure || req.headers('x-forwarded-proto') === 'https'
+    // secure: req.secure || req.headers('x-forwarded-proto') === 'https'
+    secure: req.secure || req.protocol === 'https'
   };
 
   res.cookie('jwt', token, cookieOptions);
@@ -93,16 +98,23 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
 
   // check if token has been provided
   if (!token) {
-    return next(new AppError('You must be logged in to access this route.', 401));
+    return next(
+      new AppError('You must be logged in to access this route.', 401)
+    );
   }
 
   // verify the token
-  const decodedToken = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decodedToken = await promisify(jwt.verify)(
+    token,
+    process.env.JWT_SECRET
+  );
 
   // check if user still exist
   const currentUser = await User.findById(decodedToken.id);
   if (!currentUser) {
-    return next(new AppError('The user belonging to the token does no longe exist.', 401));
+    return next(
+      new AppError('The user belonging to the token does no longe exist.', 401)
+    );
   }
 
   // check if user changed their password after login
@@ -124,7 +136,9 @@ exports.protectRoute = catchAsync(async (req, res, next) => {
 exports.restrictRouteTo = (...roles) => {
   return async (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403));
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
     }
     next();
   };
@@ -134,7 +148,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   // get user based on POST email
   const user = await User.findOne({ email: req.body.email });
   if (!user) {
-    return next(new AppError(`There is no user with email "${req.body.email}"`, 404));
+    return next(
+      new AppError(`There is no user with email "${req.body.email}"`, 404)
+    );
   }
 
   // generate the random reset token
@@ -142,7 +158,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // send it to user's email
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+  const resetURL = `${req.protocol}://${req.get(
+    'host'
+  )}/api/v1/users/reset-password/${resetToken}`;
 
   try {
     await new Email(user, resetURL).sendPasswordReset();
@@ -156,7 +174,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
-    return next(new AppError('There was an error sending the email. Try again later.'));
+    return next(
+      new AppError('There was an error sending the email. Try again later.')
+    );
   }
 });
 
@@ -215,7 +235,10 @@ exports.isLoggedIn = async (req, res, next) => {
   }
   try {
     // verify the token
-    const decodedToken = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
+    const decodedToken = await promisify(jwt.verify)(
+      req.cookies.jwt,
+      process.env.JWT_SECRET
+    );
 
     // check if user still exist
     const currentUser = await User.findById(decodedToken.id);
