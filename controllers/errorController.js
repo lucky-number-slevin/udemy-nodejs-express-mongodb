@@ -4,10 +4,14 @@ const sendErrorDev = (err, req, res) => {
   // A) API
   console.error('[DEVELOPMENT ERROR: (API)]', err);
   if (req.originalUrl.startsWith('/api')) {
+    let message = '';
+    if (err.response && err.response.data) {
+      message = err.response.data.message;
+    }
     return res.status(err.statusCode).json({
       status: err.status,
       err,
-      message: err.message,
+      message: message || err.message,
       stack: err.stack
     });
   }
@@ -72,7 +76,8 @@ const handleValidationErrorDB = err => {
   return new AppError(message, 400);
 };
 
-const handleJWTError = err => new AppError('Invalid token. Please login again.', 401);
+const handleJWTError = err =>
+  new AppError('Invalid token. Please login again.', 401);
 
 // by specifying 4 args, express automatically knows that this is
 // error handling middleware
@@ -87,7 +92,8 @@ module.exports = (err, req, res, next) => {
     error.message = err.message;
     if (error.name === 'CastError') error = handleCastErrorDB(error);
     else if (error.code === 11000) error = handleDuplicateErrorDB(error);
-    else if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
+    else if (error.name === 'ValidationError')
+      error = handleValidationErrorDB(error);
     else if (error.name === 'JsonWebTokenError') error = handleJWTError(error);
 
     sendErrorProd(error, req, res);
