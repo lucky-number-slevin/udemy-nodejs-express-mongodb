@@ -1,44 +1,5 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
-const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
 const axios = require('axios');
-
-const createBookingCheckout = async session => {
-  const tour = session.client_reference_id;
-  const user = await User.findOne({ email: session.customer_email });
-  if (!user) {
-    console.log('Cannot find user with email: ', session.customer_email);
-    return;
-  }
-  const price = session.display_items[0].amount / 100;
-  await axios.post(process.env.BOOKINGS_API_URL, {
-    tour,
-    user: user.id,
-    price,
-    paid: true
-  });
-};
-
-exports.webhookCheckout = (req, res, next) => {
-  const signature = req.headers['stripe-signature'];
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook error: ${err.message}`);
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    createBookingCheckout(event.data.object);
-  }
-  res.status(200).json({ received: true });
-};
 
 exports.getAllBookings = catchAsync(async (req, res, next) => {
   const bookings = (await axios(process.env.BOOKINGS_API_URL)).data.Items;
