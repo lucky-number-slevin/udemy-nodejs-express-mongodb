@@ -2,18 +2,13 @@
 
 import axios from 'axios';
 import { showAlert } from './alerts';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: './../../config.env' });
-
-console.log('BOOKINGS_API_URL', process.env.BOOKINGS_API_URL);
-console.log('BOOKINGS_API_URL', process.env.STRIPE_KEY);
-const stripe = Stripe(process.env.STRIPE_KEY);
+const stripe = Stripe('pk_test_YmprdTa57CkXANzE4eUTa8Ml00hvPMwGpC');
 
 export const bookTour = async tourId => {
   try {
     // 1. get the checkout session from the server (API)
-    const sessionUrl = `${process.env.BOOKINGS_API_URL}/checkout-session`;
+    const sessionUrl = `https://b8qs93xvt4.execute-api.eu-central-1.amazonaws.com/dev/bookings/checkout-session`;
     console.log(`SESSION: ${sessionUrl}/${tourId}`);
     const session = await axios.get(`${sessionUrl}/${tourId}`);
 
